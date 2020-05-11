@@ -1,3 +1,82 @@
-Logical Languages : The Details
+Gathering Meta-Information in Logical Languages
+
+In the last video, we have used disjunctions as our means of case distinction, like in the example where Alice does different things depending on the surrounding.
+
+let Alice can reason dance climb quiet loud rocky Input Output in
+  or Input = quiet, Output = Alice can reason.
+  [] Input = loud , Output = Alice can dance.
+  [] Input = rocky, Output = Alice can climb.
+  end
+end
+
+However, what happens if we never get to the point that the surrounding or Alices action is ever determined? By what we have stated until now, our program just freezes and that is the end of story, but sometimes, we want a program to autonomously search for possible solutions. An example: if we had the knowledge that the Input were never to be deduced, we could say that in this case, we should choose one that does not cause a conflict. So, in this video, we will create a mechanism to gather information on which variables will be deduced and what else we can achieve along the way. Funnily, it starts with preparing one of the steps needed for the research, namely reasoning about terms, also known as "reflection".
+
+Our language is made up of terms. We write them down, so they technically have to be somewhere, even if we can't see them. Let's model an arbitrary term in our language. To save some let-statements, I will colour the variables that just serve as constants.
+
+or Term empty.
+[] Term (var X).
+[] Term (bind X in E), Term E.
+[] Term (X = Y), Term X, Term Y.
+[] Term (X /= Y), Term X, Term Y.
+[] Term (X apply Y), Term X, Term Y.
+[] Term (X and Y), Term X, Term Y.
+[] Term (X or Y), Term X, Term Y.
+end
+
+This is a direct translation of our description in the last video. A term can be empty, a variable with an address, a thing binding a variable, an equality or inequality, something binding two terms or conjunction or disjunction.
+
+Our aim is to be able to create terms and then run them with minimal overhead. The first step is to create a new term that carries space for the actual variable assignments.
+
+or Assignable empty empty
+[] Assignable (bind X in E) (bind X in E'), set content X to C from E to E'.
+[] ...
+end
+
+or set content X to C from empty to empty.
+[] set content X to C from (var X') to (var X' C), X = X'.
+[] set content X to C from (var X') to Y, (X \= X').
+[] ...
+end
+
+This creates terms where the variables get an additional argument (var X C), where C is the actual variable with the actual content, whereas X is just the variables address. So the bind statement creates that new variable, and it is ensured that variables with the same address point to the same space in memory.
+
+Now we would like to define what the evaluation of a term means. To make this a little easier, we have to desugar our original terms. The main reason for desugaring is the application in the equality. As we have seen in the previous episode, X = (Alice can) (do anything) is just a long term for X = (K K'), K = (Alice can) and K' = (do anything), so the content of X just becomes a tuple, and each tuple of variables has exactly one variable with this tuple stored as a constant. After the desugaring, variable equality just stays the fact that the contents of the variables need to be equal. Therefore, the desugaring for tuples looks like
+
+desugar (var X C = X appl Y) (bind K K' in var K A = Xd and var K' B = Yd)), C = A B, desugar X Xd, desugar Y Yd
+
+--TODO: Maybe give the tuple variable back? Otherwise it is created over and over...
+
+This binds the new variables in the reflected terms and makes sure that the real content of the original variable becomes the tuple needed.
+
+Next up, there are many connectors for terms, like and and or or equality. This could, as well, just be expressed via tuples and would create less case distinctions for the equality. So let's do that.
+--TODO
 
 
+We can now define what the evaluation of a term means. It is just the translation of our terms into the concepts we have in the language.
+
+Eval X, Assignable X' X.
+or Eval empty
+[] Eval (var X C)
+[] Eval (bind X in E), Eval E
+[] Eval (var X Cx = var Y Cy), Cx = Cy
+[] Eval (var X Cx = A appl B), Cx = C1 C2, Eval (var X1 C1 = A), Eval (var X2 C2 = B)
+[] ...now the commutative cases
+[] Eval (A appl B), Eval A, Eval B --TODO
+[] Eval (A and B), Eval A, Eval B
+[] Eval (A or B), Eval A
+[] Eval (A or B), Eval B
+end
+
+There are several things to be observed here. first, there is a case distinction for equality on variables. This is because in the case of the application, the equality is not on the hidden variable.
+--TODO Maybe just resolve the hidden variables first?
+
+
+---------------------------------------
+--Big TODO: The details of this reflection are super cumbersome. This needs heavy cleaning. I am going to continue writing to finally get to the payoff of of reflection, but this needs to be heavily worked on.
+Maybe introduce some quoting operator? Just try out if it helps. Next up, maybe just every variable needs an operator to get back to its original address? Its implementation or something?
+----------------------------------------
+
+
+With this reflection we can now do two amazing things. We will not go into detail to the first one, but it is worth mentioning. With reflection, we can use terms of our language as templates for more sophisticated terms! Imagine e.g. wanting a compiler where you can just sketch code, and your errors are automatically removed. Your initial code would go as an input and initial guess for the search towards the correct program, without needing to be correct code. Or if you want to add a feature like logging or something into your code without changing it explicitly. Now...all possible.
+
+But yeah, the second and at least here more important upside of reflection is that we can gather runtime data for our terms. We can measure the term size, or the number of assignments or data transfer. This isn't even too much overhead. As the final assignments for variables are actually being deduced, if a terms construction depends on them, they can just be queried from the real evaluation. Whatever measurement we are using, there is a predicate "measureTime Term Time" that gives us the runtime of a term. if we have two terms we could evaluate, say, in a disjunction, we could choose the one with the lowest runtime. If however determining which runtime is fastest is slower than choosing, the branch is chosen at random.

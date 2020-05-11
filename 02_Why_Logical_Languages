@@ -1,72 +1,86 @@
 Why Logical Languages?
 
-What we often forget in computer science is the initial feeling we had with computers. Weird looking machines that, as soon as black windows opened, we had no idea what they were telling us. Now we take the ability to read a programming language for granted, but let's take a step back and ask ourselves how we could create a language that is actually intuitively readable. For that, we take a look at how computers work to see what are the minimum requirements for a language. Then, we find a way to interact with these machines in an a bit more human language.
+What we often forget in computer science is the initial feeling we had with computers. Weird looking machines that, as soon as black windows opened, we had no idea what they were telling us. Now we take the ability to read a programming language for granted, but let's take a step back and ask ourselves how we could create a language that is actually intuitively readable. For that, we take a look at how computers work to see what the minimum requirements for a language are. Then, we find a way to interact with these machines in an a bit more human language.
 
 Just quick: The language presented here is still a fictional one. If you want to experiment with the concepts shown, I advice to take a look at either Haskell, Oz or PROLOG. I will put links into the description.
 
 Let's look at what we need for a language. The one thing we can't really change about computers is how memory works. A whole lot of boxes that exactly one thing fits in. There are boxes that we put the input in, there are other boxes we get the output out. Some magic inbetween. Of course it's not magic, it's just hidden.
 If we ever want anything to end up in our output boxes, we need objects that put it there. We call those assignments.
 An assignment copies content from one box into another. The assignment itself is also an object that contains the positions, or pointers, to the boxes it makes equal, so yeah, lets put it into some box of its own as well. As soon as we do so, and one of the target boxes is filled, the other box fills respectively.
-Just plane assignments are kinda boring though, as they always assign the same value. Most of the time, we want an assignment to depend on some input. That is why there is a conditional assignment. This is an object that states that if some two assignments are equal, a target box should be equal to a box A, and if not to a box B. Last but not least, we need an object that can find new boxes to store in, but let's end the details here.
+Just plane assignments are kinda boring though, especially when we are just assigning to a constant. Most of the time, we want an assignment to depend on some input. That is why there needs to be a conditional assignment. This is an object that states that if some two assignments are equal, a target box should be equal to a box A, and if not to a box B. Last but not least, we need an object that can find new boxes to store in, but let's end the details here.
 
 All of this is just what we need in order for a computer to do anything. But what does this have to do with nice languages? The reasons are grammars.
 
-Grammars are used to model languages, no matter their level of naturality. In these grammars, we formulate rules like "if Alice can X then X is a verb". This X is a box, also called variable, for any fitting word. Let's say, we want to create a meaningful sentence. As an input, we have a fixed part of the sentence in boxes and an empty box for our X. The grammar is also stored in some boxes. If in our grammar a premise, the part between the "if" and "then", fits without conflict, the posterior, the part after the "then" is now also a sentence on our box X. If somewhere in our grammar we stated that "if X is a verb then X=(do anything)", the sentence is completed to "Alice can do anything". Nice and readable.
+Grammars are used to model languages, no matter their level of naturality. In these grammars, we formulate rules like "if Alice can X then X is an action". This X is a box, also called variable, for any fitting word. Let's say, we want to create a meaningful sentence. As an input, we have a fixed part of the sentence in boxes and an empty box for our X. The grammar is also stored in some boxes. If in our grammar a premise, the part between the "if" and "then", fits without conflict, the posterior, the part after the "then" is now also a sentence on our box X. If somewhere in our grammar we stated that "if X is an action then X=(do anything)", the sentence is completed to "Alice can do anything". Nice and readable.
 
-With a bit of pondering it is quite straight forward that in a grammar, or natural language, we can express everything we need for our box computers, so they can be used as a programming language. Furthermore, they have the great upside that we do not need to care for order of execution. This is one of the major problems with sequential languages. We always have to keep in mind what's going on first and second and so on. With logical languages, in the best scenario, everything is just happening at the same time, or at least it feels like it would.
+With a bit of pondering it is quite straight forward that in a grammar, or natural language, we can express everything we need for our box computers, so grammars can be used as a programming language. Furthermore, they have the great upside that we do not need to care for order of execution. This is one of the major problems with sequential languages. We always have to keep in mind what's going on first and second and so on. With logical languages, in the best scenario, everything is just happening at the same time, or at least it feels like it would.
 
-Let's define a proper logical language then. The first thing we need is something to bind new variables, or to "find new boxes", because otherwise we would have no variables to start with. With "let A B + - ... in ... end" we can introduce any previously unbound identifier. Admittedly, this is the ugly part. However, as we can use almost any names for the variables that we want, we can shape the language as we like. Next thing we can formulate are equations, like two of our identifiers being equal, to move information. Our example from above would, in the end, look like "let Alice can in let Input in let X in Input = Alice can X end end end". That is a lot of binders, so let's assume that previously unbound variables are automatically bound, but only until we encounter a period. Our example now looks like "Input = Alice can X." If we want to use Alice multiple times without creating a new Alice every time, we'd have to bind the name, so we could write e.g.
-"let Alice can Input in
-  Input = Alice can X.
-  Input = Alice can Y.
-  Input = Bob could X.
- end"
-Now, the Input and Alice and the can all refer to the same variable, while the X and Y are local. The X from the Alice sentence is a different X than from the Bob sentence.
+For the remainder of this video, we want to actually create such a language. Apart from getting a deeper understanding how the language can work, it will also be crucial to know the parts it is made of. This knowledge will, in later videos, be used to give the language the possibility to create itself, or to make self writing programs.
 
-We have now accumulated a few things that need introduction. First: Why can we write variables next to each other in the equations? Shouldn't an equation just make two variables equal? Yes, and it does. In fact, there is a hidden operator often refered to as "application". If we write two variables next to each other, they represent a new variable that stores a tuple pointing to the two variables. I am not going into technical details here, but this makes something called "terms" possible. They are just super nice to read when dealing with many boxes at the same time, like we would in a sentence. A rule of thumb: Writing variables next to each other makes a list of them. If we want more of a tree structure we can use brackets, like "Alice can (do anything)", you will see in a second how that is useful. Important is: The Equality traverses down these terms. So if we have "A B = C D" this actually means "A = C and C = D". You can imagine why we want to avoid explicitly writing that.
-
-If we write several equations, separated with periods, below each other, we assume them to be conjuncted, meaning they all hold at the same time. As an example, if we have
-let Alice can do anything Input in
-  Input = Alice can X.
-  Input = X Y (do anything).
+Let's define a proper logical language then.
+As we have just seen, we need to give our boxes names, So let's start of with an instruction that gets a new box with an arbitrary name, say "let X in ... end". Within the in-part, the name of our variable will always refer to the same place in our memory. We can now use the equal sign "=" to force the content of two distinct variables to be equal, like
+let Alice Bob does X Y in
+  Alice does X.
+  Bob does Y.
+  X = Y.
 end
-There are now two equalities that hold on the Input variable. Therefore, if we observe the input, we get that "Alice can (do anything)" is in the input variable.
+However...how do we fill variables in the first place? The answer is with constants. Those could be predefined (booleans, characters etc.) but actually, they are pointers to our memory itself. Pointers are an arrow to a box, and they can themselves be put into a box. A constant is, in a sense, a box that points to itself. Kind of like the initial boxes with content. The reason they will not be made explicit (yet) in our language is that usually, we just assume to have the addresses of our constants stored in variables, so the content is rarely made explicit. The message here is: There are some boxes already filled, their content can be checked for equality and they form the readable part of our inputs and outputs. Putting something into our outputs just ultimately means there will be a constant copied into the output variable.
 
-How do we do the conditional equality now with which we actually make the language decide something? Now, we could have an if-then-else operator, but you will see in a second that there is a nicer way. We introduce a disjunction. A disjunction is a choice that the language makes. Let's see first how it would be used before we go into details.
-let Alice can reason dance climb Input in
-  or Input = Alice can reason.
-  [] Input = Alice can dance.
-  [] Input = Alice can climb.
-  end
+Next up, let's clean the language a bit. To save some let-boilerplate, we assume that unbound names are automatically bound until the next period
+let Alice Bob does in
+  Alice does X.
+  Bob does X.
 end
-I am currently borrowing from Oz's syntax, but what we just stated is that the Input has three possibilities. It is impossible for the language to determine which possibility to take, so if the observe the Input, it would be some "Alice can X" because the choices only agree on the initial segment of the sentence. Let's assume out input is not the question what Alice can do, but the question on what she does given a certain atmosphere. This looks like
+so, Alice and Bob are, in fact, doing possibly different things.
+
+Next, as we have already partially done, things that are written below each other or separated by commas or periods all count as holding at the same time, like in out rifst example (Note how this time X and Y are pre bound)
+let Alice Bob does X Y in
+  Alice does X.
+  Bob does Y.
+  X = Y.
+end
+
+We now need some more explanation for equality and sentences. Take the following example:
+let Alice does sports Output in
+  Output = Alice does sports.
+end
+Here, we assign the output to a nice sentence, but this sentence is made up of more than one variable. This works because we assume writing variables next to each other means that a new variable is created thats content is a tuple with two pointers to the adjacent variables. This is right associative, and in this example the actual variable would have the content ((Alice, does),sports). What's important is that equality recursively holds down these tuples as well. So we start with
+Output = ((Alice, does), sports)
+First, we know that the output now at least has to be a tuple as well, with the contents being equal, like
+Output = (A,B),
+(A,B) = ((Alice, does), sports),
+A = (Alice, does),
+B = sports,
+and further, same goes for the A, so we get
+A = (C,D),
+C = Alice,
+D = sports.
+Luckily, our language does all that in the background, so we don't need to worry. It is good to know though that we can use terms quite easily, without any complicated implementation constructs. This will come in handy later when we need to reason about our language within our language itself.
+
+
+And now we get to the last and probably most important part of our language, the conditional equality. This could be done with an if then else statement, but we will see in a second that this is not as readable. Instead, we will be splitting it in two parts: disjunctions and negations.
+
+In a disjunction we just state that there are several possible things that can happen. Much like an "if X then A else B" statement, where we don't know what will happen until we evaluated X, it can also be stated as "X=true and A or X=false and B". This is one of the few examples where natural language is a bit harder to read, so let's go with the following example, borrowing a bit of Oz's syntax:
 let Alice can reason dance climb quiet loud rocky Input Output in
   or Input = quiet, Output = Alice can reason.
   [] Input = loud , Output = Alice can dance.
   [] Input = rocky, Output = Alice can climb.
   end
 end
-The commas as read as an "and". In each disjunction, two equalities have to hold now. It is important to know, that a disjunction does not make any assignments unless it is already clear which path will be taken. This is known as the Andorra principle. But as soon as assignments have been made, that make it clear which way to go, all assignments in that path are put into the memory. This happens when e.g. the Input variable has been fixed before.
-If the Input is fix, it is unique which path of the disjunction is taken, so e.g. if the  Input is "quiet", the Output becomes "Alice can reason", like so
+Here, we have an input variable stating what the current surrounding looks like and an output variable stating what Alice will do with that surrounding. If we fix the input, like "Input = quiet", then there is only one branch that could be executed, so the output is set to "Output = Alice can reason". If it is not clear which path is taken, the disjunction stay unevaluated. This is known as the "Andorra Principle", which Oz and the mozart system have an implementation of, and it is one of the main reasons why the concept of this research works. Details on this later.
 
-let Alice can reason dance climb quiet loud rocky Input Output in
-  Input = quiet.
-  or Input = quiet, Output = Alice can reason.
-  [] Input = loud , Output = Alice can dance.
-  [] Input = rocky, Output = Alice can climb.
-  end
+One funny thing to note is that, when implemented properly, even though we might not know the input, we know the output is some "Output = Alice can X", because all alternatives have the same prefix. Even better, the whole thing also works the other way around. Let's say we fix the output to "Output = Alice can dance". Now, as well, only one branch of the disjunction is possible, so the input is being assigned to "Input = loud". This is the reason why logical languages really don't have a concept of input or output. They just deduce the obvious and put it into the memory. No need to rewrite your code just to reverse it (almost).
+
+Now for the second part: Negations. There is a concept that already almost comes with the disjunctions. In order to know that no branches except one are valid, there needs to be a computable notion of a set of equalities not holding. Sometimes, we want to explicitly say that a statement only holds if another one does not hold. So the classical "if X = Y then A else B" would be expressed as
+or X  = Y, A
+[] X /= Y, B
 end
+This notion can be generalised to an arbitrary negation, a "not Statement", but the details of how this works will be covered in the next video, as it requires something like reflection to work. Here, it should just be mentioned that this concept exists and is, in fact, necessary for some deterministic computation.
 
-Funnily, this also works in the other direction. If the output is known, the input can be deduced. So if the Output was "Alice can dance", we know the Input must have been "loud", like so.
 
-let Alice can reason dance climb quiet loud rocky Input Output in
-  Output = Alice can dance.
-  or Input = quiet, Output = Alice can reason.
-  [] Input = loud , Output = Alice can dance.
-  [] Input = rocky, Output = Alice can climb.
-  end
-end
+That is all the concepts we need for a logical language. In the next videos, we will use this structure to form the basis of this language writing itself.
 
-That is why logical languages do not really need a concept of input or output. They only have a concept of where there is information missing.
+One last note from me: Programming languages can become a lot more human like, with even less special symbols. However, this would require a lot more details and the implementation would need the universal solver that we are aiming to create. For now, the language we just created is perfectly sufficient to give a formal but readable explanation of what we are creating.
 
-Programming languages can become a lot more human like, with even less special symbols. However, this would require way too much explanation and the implementation would need the universal solver that we are aiming to create. For the scope of this project, the language we just created is perfectly sufficient to give a formal but readable explanation of what we are creating.
+That's it for today. Thank you for watching!
+I am Arved, and see you soon!
