@@ -25,6 +25,40 @@ end
 
 This is a direct translation of our description in the last video. A term can be empty, a variable with an address, a thing binding a variable, an equality or inequality, something binding two terms or conjunction or disjunction.
 
+The problem with this formulation is that it is quite complex. There are a lot of so-called constructors, and many of them behave quite similar. That is why we first abstract a little further. A language term, in a sense, is nothing but a list of symbols or names or tokens, however you want to call them. Sometimes these symbols are grouped. We will see in a second that this just means that terms are just trees with symbols as leafs.
+
+or Term (var X)
+[] Term (X appl Y), Term X, Term Y
+end
+
+So, the term "(Alice can) (do anything)" would be represented as "Term (( (var Alice) appl (var  can)) appl ( (var do) appl (var anything)) )". Terrible to read, but does the job. If we write "Term X", the X is not evaluated, which it would be if it were on the top level, like "Term X, X". This is in fact why we don't really need to give the application a name and just use the builtin application. The above term would then become "( (var Alice) (var can) ) ( (var do) (var anything) )". In fact, by the same logic, we can drop all names. Our terms now become
+or Term X
+[] Term (X Y), Term X, Term Y
+[] Term (let X in E), Term E
+end
+Which is, pretty much, the lambda calculus. Executing a term with some Eval X predicate would just look like
+Eval X, X.
+
+The problem with this notion however is, that these terms are not evaluated in a safe environment. If an evaluated term causes a conflict, the conflict holds for the entire system, causing yet undefined behaviour. For this, the general negation is needed, so we can state things like
+or X, A
+[] not X, B
+end
+such that there is an alternative B in case X fails. This is because technically, the Eval predicate should do more than just evaluating a term. Let Eval T T' be an evaluation function, but where T' is some object that contains all knowledge that is created during the evaluation of T. If T' contains a special symbol BOT, that means that there is a contradiction, then negation "not T" can be expressed as "Eval T T', T' contains BOT". T' furthermore contains all information that eventually lead to that conflict, which can be used for conflict analysis. It is hard to natively express how this Eval T T' predicate gathers this information, as above it is not recursively defined. However, the only information that we ever gather are variable assignments. Remember, in these variables there are the constraints and deductions alike. In the case of a conflict, there are multiple assignments to the same variable. Therefore, T' is essentially a multimemory, where each variable can contain several assignments. This multimemory can be achieved by wrapping every value into a term that represents the set of all possible values.
+
+--TODO: really multimemory? Not just normal memory still containing disjunctions after andorra?
+
+
+An honourable mention is that terms can be copied. This is, in fact, essential for the disjunction to work. If a variable needs to be "attempted" on two different assignments, these assignments need to be on different variables in order not to cause a conflict. This is achieved by creating a variable for each attempted assignment and copying all constraints that act upon it and giving the copies the new addresses. Needless to say, this becomes a bit memory inefficient when a lot of combinations need to be tested, but we will get to optimizations later.
+As this copying is done implicitly in a disjunction, we will only make copying explicit at a later point.
+--TODO: Bullshit. No copying needed for disjunction, just assignments.
+
+What is way more interesting is that this reflection feature can be used to derive even further knowledge that is deduced from the computation. This is especially important for complexity information like runtime and memory used.
+
+
+
+
+
+
 Our aim is to be able to create terms and then run them with minimal overhead. The first step is to create a new term that carries space for the actual variable assignments.
 
 or Assignable empty empty
