@@ -1,0 +1,18 @@
+Proofs in Logical Languages
+
+A proof is an object that shows the existence of a certain information based on initial assumptions. Due to the Curry Howard Correspondence, this is equivalent to a program terminating. The program are the assumptions, the input is the proposition, and the information that the program terminates is the proof. Of course, most assumptions, or axioms, are formulated in a nondeterministic way, so sometimes, in addition to the information that a program halts, it can be interesting to know why it did so, e.g. which paths it took to terminate. Most of what will be used as proof objects are these so-called certificates, that are nothing else than path descriptions through a nondeterministic axiom system.
+
+Enough for the general idea. More concretely, if we want to prove the existence of an object, we put it into a variable and wait for it to be assigned. But what if the object does not exist? Or even worse, what if it exists and the andorra principle just doesn't find it?
+
+The easiest part is to know if the andorra principle does not find the proof. It is not possible in every case, but quite often the principle terminates without having assigned the desired variable. In this case we know it is not going to be deduced. This doesn't mean there isn't a way to, it just means that this way is probably not unique or unknown. In order to fix this, the search needs to be split. The difficult part here is that the split is just on an open conjunction, but when we split on a variable, we mean that we split on a conjunction that contains an assignment of the variable
+--TODO: not sure if the need the latter
+
+Now for search strategies. The aim is to first formulate what a "complete" search strategy is. Only with a complete strategy, universal statements can be proven. "Forall X, P X" means that a complete solver can determine, that "not Exists X, not P X".
+
+As conjunctions just get evaluated and we will care for nontermination problems later, the main argument for completeness is the disjunction. There just needs to be a proof that the search strategy, when encountering a post-andorra disjunction, can determine the satisfiability of each clause slightly deeper. So, the disjunction not only gets deterministic when the immediate variable assignment can say so, but even when the whole search stays satisfiable with only one clause. We could just add this into the clause, but immediately, that wouldn't change a whole lot. The reason is that unique solutions would stay unique, but it is still unsure on which branches the enhanced andorra would need to be triggered. This is where a search strategy would come in: If it is not known on which branch, it needs to be all of them. This seems a little extensive and it is, but betterment can only be achieved when talking about determinism and complexity.
+
+What needs to be made sure is that if we could have known from somewhere which part of the disjunction leads to a solution, it should just propagate with andorra already. That is what we have a solver object for representing that cache. Only with this cache the search can eventually stop being broad and focus.
+
+For deterministic search, we cannot even do everything at once all the time. we have to choose. Same rules apply. If the deterministic search can see that there is a proof of which way to take it takes it, if not, it acts random. Which way was the right way depends on the search itself.
+
+Anyway, what is needed is a solver M. If we evaluate M T T', where T is some input term and T' some output information, T should at least evaluate according to the andorra evaluation. It should also evaluate in some complete fashion. All complexity information is relative to M.  

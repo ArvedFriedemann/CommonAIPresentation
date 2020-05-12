@@ -1,0 +1,4 @@
+Deriving Complexity Information from Computation
+
+Intuitively, it should be absolutely possible to get a term and derive the number of steps a machine took to evaluate it. This is also the case here. The most important complexity measure is the andorra propagation. We assume three elementary operations, equality, variable creation and movement.
+--TODO: Just go recursively through it and count them, jeez 
