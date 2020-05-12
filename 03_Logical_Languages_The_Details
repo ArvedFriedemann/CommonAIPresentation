@@ -52,7 +52,17 @@ An honourable mention is that terms can be copied. This is, in fact, essential f
 As this copying is done implicitly in a disjunction, we will only make copying explicit at a later point.
 --TODO: Bullshit. No copying needed for disjunction, just assignments.
 
-What is way more interesting is that this reflection feature can be used to derive even further knowledge that is deduced from the computation. This is especially important for complexity information like runtime and memory used.
+What is way more interesting is that this reflection feature can be used to derive even further knowledge from the computation. This is especially important for complexity information like runtime and memory used. As in our current model, no value is explicitly deleted and the constraints have constant outdegree due to their term structure, memory usage and runtime are equivalent for now. Therefore, for a term, just the hidden variables created during evaluation need to be counted.
+
+This gets interesting when a term is just "hypothetically" evaluated. In order for optimal solvers to work, disjunctions need to be prepared a little. The idea is, that each disjunction branch has a variable attached declaring the search time in case this branch were executed. So, more formally, in a disjunction with the branches C = or C1 [] ... [] Cn end, there are variables with vars = [t_C1, ... ,t_Cn] such that C' = or (C1, smallest t_C1 vars) [] ...[] (Cn, smalltest t_Cn vars) end. Additionally to C', we add the constraints that Eval (or Ci [] (not Ci), C' without Ci ) T', t_Ci = number of steps T'.
+--TODO: This does not force evaluation. If the execution is at a point where it is not known what the result of Ci is, the andorra cannot proceed. There need to be further constraints saying that the whole thing needs to be more or less deterministic!
+--TODO2: This needs to be relative to a solver!
+--TODO3: Whaddabout branching? ugh...brain's not working right now.
+This states that if the correct times for a branch are known, the fastest branch needs to be chosen, or vice versa, the chosen branch needs to have the fastest solving time.
+
+
+
+
 
 
 
