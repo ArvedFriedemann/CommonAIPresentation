@@ -1,4 +1,9 @@
 Deriving Complexity Information from Computation
 
-Intuitively, it should be absolutely possible to get a term and derive the number of steps a machine took to evaluate it. This is also the case here. The most important complexity measure is the andorra propagation. We assume three elementary operations, equality, variable creation and movement.
---TODO: Just go recursively through it and count them, jeez 
+There are several reasons the Andorra evaluation can come to a halt. The most important on is that information could be missing, leaving an open disjunction. If the Andorra evaluation should suffice to evaluate all disjunctions, it needs to be made sure enough information is eventually available. This Chapter is about what information can be additionally obtained to ensure more determinism.
+
+When a disjunction stays open, the information needed is which way will lead to a solution. Obviously, this information can mostly only be derived by actually trying the path out, but if we have additional information, maybe from previous paths, we could be lucky and know it in advance. This is why there needs to be a set of clauses that generally hold on search, that even traverses down into the disjunctions (as the terms are defined recursively anyway).
+
+This could even be used to deduce solving speeds. It is one thing to know which path will lead to a solution eventually, but quite often we want to have the fastest solution available. To really determine the speed of such an "agent", we'd need a proper measurement to measure the number of steps from the Andorra evaluation, especially modulo some facts that represent the agent.
+
+ So, there is a term M T, such that Eval (M T) results in the term T containing the general information on how search works, which recursively is handed down, so M has a pointer to itself.
