@@ -1,6 +1,6 @@
 Reasoning about Terms
 
-This part is about explaining how to reason about an active search state within the state itself. In other words, when we are given knowledge in form of a conjunction with either facts or disjunctions, how could we derive from the facts how to narrow down the disjunctions, when Andorra would otherwise fail? The clue is that we can contain meta statements that can give additional facts about the disjunctions that may only be based on the structure of the disjunction, not its actual contents. 
+This part is about explaining how to reason about an active search state within the state itself. In other words, when we are given knowledge in form of a conjunction with either facts or disjunctions, how could we derive from the facts how to narrow down the disjunctions, when Andorra would otherwise fail? The clue is that we can contain meta statements that can give additional facts about the disjunctions that may only be based on the structure of the disjunction, not its actual contents.
 
 We allow for the following Term structure.
 
@@ -61,6 +61,9 @@ selfTransform lst = lst ++ ((rights lst) <*> (lefts lst))
 
 (please note that in the list monad, the <*> applies all functions from the left list to all arguments in the right list. For reference: https://en.wikibooks.org/wiki/Haskell/Understanding_monads/List)
 
+This would apply all (encoded) functions to the terms in their contexts (possibly their own encoding). It should be noted, but for now not further followed, that when doing something like an "attempt", where we try out an assignment without moving the new facts to the topmost context, these functions should also traverse to this lower context. If this is confusing don't think about it now, it is an easy to solve but very technical problem. 
+
 What causes headache here is that obviously each function in the list has a term representation, while also each term represents a function. So there are functions eval :: Term -> (Term -> Term) and encode :: (Term -> Term) -> Term, where, the encode function cannot usually be expressed. The takeaway message is: By modifying the terms, we also modify the functions that should be mapped over the terms etc. This way, we can transport knowledge from terms onto the terms themselves. If done wrong, this can get heavily computationally expensive. Imagine deducing an identity function and always applying it to each variable. This problem can be solved, but will be addressed later.
+
 
 What works in the functional context also works in the logical one. Either it is already implemented that the "forall" rules are mapped over all statements in the conjunction, then nothing more needs to be done. If no such forall statement exists, one always needs the variable in which the current general term is stored. Let's call it SELF. In this case, the conjunction contains something like "map RULE on SELF", where RULE is the statement from earlier. This is one of the mechanics needed to create a solver with a solver. Facts about search are deduced and then directly mapped to the current knowledge.
