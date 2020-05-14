@@ -1,0 +1,66 @@
+Reasoning about Terms
+
+This part is about explaining how to reason about an active search state within the state itself. In other words, when we are given knowledge in form of a conjunction with either facts or disjunctions, how could we derive from the facts how to narrow down the disjunctions, when Andorra would otherwise fail? The clue is that we can contain meta statements that can give additional facts about the disjunctions that may only be based on the structure of the disjunction, not its actual contents. 
+
+We allow for the following Term structure.
+
+or Term X, address X
+[] Term (X Y), Term X, Term Y
+end
+
+So a term is either just an address (or name, or variable) or the product of two terms. To create a language from terms, we define some fixed names for constants.
+
+=   for equality of two terms,
+\=  for inequality,
+,   for conjugation, (alternatively, a linebreak)
+or    as opener for disjunction,
+[]    for disjunction constructor,
+end   for closing an opener,
+bind X in E end     as existential variable binding
+forall X in E end   as universal variable binding
+not   for intuitionistic negation
+new   to create a variable containing a new constant (modelled as variable pointing to itself).
+
+Their interpretation is intended to be the general first order semantics, inspired by Oz.
+What is new here is the "forall" binding. Its use is motivated for meta reasoning.
+
+A search state is a conjunction of terms, itself being a term as well. This term could contain information about how terms could be evaluated. Let's look at an example.
+
+or A [] B [] C end
+not A
+not B
+
+Where A, B and C a terms, or rather some statements. As we know that A and B do not hold, the Andorra principle infers that C holds. In this example, knowledge about the provability of A and B are contained in the top level conjunction. This is knowledge that otherwise could only be inferred by trying both A and B, so having not A and not B on top level gives a shortcut.
+
+Here, we have another example:
+
+or A, B
+[] B, A
+end
+
+This example is somewhat constructed, but it is easy to see that this should become the statement A, B. This would happen by adding the following fact:
+
+forall X Y in ( (or X, Y [] Y, X end) , X, Y) end
+
+The semantics of the forall in this case is that it evaluates to a conjunction of all terms that come from substituting A and B with existing variables. There is a problem with these semantics, but we will get to that later.
+If X and Y are instantiated to A and B respectively, the easier to handle facts A and B emerge. There is a way to do this without the special "forall" symbol, but this way looks more intuitive. Long story short: If general information about the search is derived, it can make the search faster and help the Andorra principle to make more disjunctions deterministic.
+
+The problem with the above formulation is that the universal rule is not defined as an implication. "If a term has the shape (or X, Y [] Y, X end) then also X and Y hold" should be more of what is expressed. This can be done by defining something like a "function on terms" that is then mapped over a conjunction, for example. In a Haskell\AGDA-mix this would look like
+
+transform :: Term -> Term
+transform (or X, Y [] Y, X end) = X, Y
+transform t = t
+
+applyUniversal :: [Term] -> (Term -> Term) -> [Term]
+applyUniversal conjuncts deduction = conjuncts ++ (concatMap deduction conjuncts)
+
+Of course, this can also be expressed in the logical language, but I want to omit the technical details. In the logical language we now want to express something like a map on a list, where the function to map is contained in the list itself. Again, in our fictional functional mix language, this could look like
+
+selfTransform :: [Either Term (Term -> Term)] -> [Either Term (Term -> Term)]
+selfTransform lst = lst ++ ((rights lst) <*> (lefts lst))
+
+(please note that in the list monad, the <*> applies all functions from the left list to all arguments in the right list. For reference: https://en.wikibooks.org/wiki/Haskell/Understanding_monads/List)
+
+What causes headache here is that obviously each function in the list has a term representation, while also each term represents a function. So there are functions eval :: Term -> (Term -> Term) and encode :: (Term -> Term) -> Term, where, the encode function cannot usually be expressed. The takeaway message is: By modifying the terms, we also modify the functions that should be mapped over the terms etc. This way, we can transport knowledge from terms onto the terms themselves. If done wrong, this can get heavily computationally expensive. Imagine deducing an identity function and always applying it to each variable. This problem can be solved, but will be addressed later.
+
+What works in the functional context also works in the logical one. Either it is already implemented that the "forall" rules are mapped over all statements in the conjunction, then nothing more needs to be done. If no such forall statement exists, one always needs the variable in which the current general term is stored. Let's call it SELF. In this case, the conjunction contains something like "map RULE on SELF", where RULE is the statement from earlier. This is one of the mechanics needed to create a solver with a solver. Facts about search are deduced and then directly mapped to the current knowledge.
