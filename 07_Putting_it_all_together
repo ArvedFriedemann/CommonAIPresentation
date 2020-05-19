@@ -1,0 +1,12 @@
+Term Learning
+
+When a term is "learned" it is just a fancy way of saying a variable containing an executable term is deduced. So if we want a term with property P in the variable T, we just have to deduce (P T). The interesting thing about this technology is though, that already the facts used in the deduction of the term can be used to either execute the term or execute some feature of it. AN example would be searching for an optimal solver in terms of speed. Sure, this solver might not even be deducible, but during the search, we might find a solver that is just complete and maybe a little faster than the standard solver we use. This solver could be directly used to speed up the search for, let's say, the next solver.
+In a functional setting, this would be represented by a function, that runs a solver and returns the next solver, that is then run again and so on. If the search for a solver were linear, this would perfectly suffice. However, it is much more likely that through splitting, there are several possible solvers that could be the next iteration, and they have to be properly merged. In this chapter, we will explore how to iteratively create an optimal solving term in a logical language.
+
+The idea is to only be able to continue the search when a new solver is available. Say, there are some meta properties that have to be deduced before concrete values can be deduced first. That way, the next search step can only occur when enough information from the old state was retrieved.
+
+The decision that needs to be deduced is with which solver to continue. Is there one that is good enough to be exchanged or should one continue with an old version? This is best formulated for a deterministic algorithm, so maybe I should be more precise on that.
+
+SOLUTION: After each andorra step, there is a variable that is assigned to the best currently known solver, over all branches. That one is used as the next solver for the andorra propagation.
+Could this be done better by using the new solver as soon as a fact about it is deduced? Especially helpful when andorra does not terminate.
+This does partially happen when controlling the optimal solver with the facts that come up. The only difference is with splitting. In this case, a fact can also be removed again (which is not the point of a fact). Splitting in this case could mean to use both solvers in parallel, maybe even make them work together? It's a bit weird.
